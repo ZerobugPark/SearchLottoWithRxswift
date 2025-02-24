@@ -64,7 +64,20 @@ class LottoViewModel: BaseViewModel {
         
         input.basicButtonTapped.flatMap {
             NetworkManager.shared.callRequest(no: self.numbers[$0.0], type: Lottery.self).debug("net")
-        }.debug("selsect").subscribe(with: self) { owner, value in
+        }.debug("basicButton").subscribe(with: self) { owner, value in
+            let outputData = owner.outputStruct(data: value)
+            outputLottery.accept(outputData)
+        } onError: { owner, error in
+            print(error)
+        } onCompleted: { owner in
+            print("onCompleted")
+        } onDisposed: { owner in
+            print("onDisposed")
+        }.disposed(by: disposeBag)
+        
+        input.singleButtonTapped.flatMap {
+            NetworkManager.shared.singleCallRequest(no: self.numbers[$0.0], type: Lottery.self).debug("net")
+        }.debug("single").subscribe(with: self) { owner, value in
             let outputData = owner.outputStruct(data: value)
             outputLottery.accept(outputData)
         } onError: { owner, error in
