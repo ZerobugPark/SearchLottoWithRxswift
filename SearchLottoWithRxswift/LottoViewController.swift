@@ -7,23 +7,59 @@
 
 import UIKit
 
-class LottoViewController: UIViewController {
+import RxSwift
+import RxCocoa
+import RxGesture
 
+final class LottoViewController: UIViewController {
+
+    
+    private let lottoView = LottoView()
+    private let viewModel = LottoViewModel()
+    
+    private let disposeBag = DisposeBag()
+    
+    override func loadView() {
+        view = lottoView
+    }
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Do any additional setup after loading the view.
+        view.backgroundColor = .white
+        
+        view.rx.tapGesture().bind(with: self) { owner, _ in
+            owner.view.endEditing(true)
+        }.disposed(by: disposeBag)
+        
+        bind()
+    }
+    
+    
+    private func bind() {
+        
+        let input = LottoViewModel.Input(viewDidLoad: Observable.just(()))
+        let output = viewModel.transform(input: input)
+        
+
+        output.numbers.asDriver(onErrorJustReturn: []).drive(lottoView.pickerView.rx.itemTitles) { (row, element) in
+            
+            return String(element)
+            
+        }.disposed(by: disposeBag)
+        
+
+        
+        lottoView.pickerView.rx.itemSelected.subscribe(with: self) { owner, value in
+            print(value.0) //row
+            print(value.1) //component
+            
+        }.disposed(by: disposeBag)
+            
+
     }
     
 
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
-    }
-    */
 
 }
