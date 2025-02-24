@@ -212,9 +212,8 @@ class LottoView: UIView {
         }
         for i in 0..<numberLabels.count {
             numberLabels[i].snp.makeConstraints { make in
-                make.edges.equalTo(views[i].safeAreaLayoutGuide)
-                make.width.equalTo(30)
-                make.height.equalTo(30)
+                make.edges.equalTo(views[i])
+               
             }
             
         }

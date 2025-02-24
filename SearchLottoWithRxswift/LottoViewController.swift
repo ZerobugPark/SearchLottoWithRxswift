@@ -40,9 +40,12 @@ final class LottoViewController: UIViewController {
     private func bind() {
         
         let input = LottoViewModel.Input(viewDidLoad: Observable.just(()),
-                                         basicButtonTapped: lottoView.basicButton.rx.tap.withLatestFrom(lottoView.pickerView.rx.itemSelected),
-                                         singleButtonTapped: lottoView.singleButton.rx.tap.withLatestFrom(lottoView.pickerView.rx.itemSelected))
+                                         pickerViewSelected: lottoView.pickerView.rx.itemSelected,
+                                         basicButtonTapped: lottoView.basicButton.rx.tap,
+                                         singleButtonTapped: lottoView.singleButton.rx.tap)
                                          
+        
+        
         let output = viewModel.transform(input: input)
         
         output.numbers.asDriver(onErrorJustReturn: []).drive(lottoView.pickerView.rx.itemTitles) { (row, element) in
@@ -52,13 +55,17 @@ final class LottoViewController: UIViewController {
         }.disposed(by: disposeBag)
         
 
+        output.textField.asDriver().drive(lottoView.inputTextField.rx.text).disposed(by: disposeBag)
+        
+
+        
         output.settingView.asDriver()
             .drive(with: self) { owner, value in
                                 
                 
                 owner.lottoView.timesLabel.text = value.timesLabel
                 owner.lottoView.dateLabel.text = value.dateLabel
-                owner.lottoView.inputTextField.text = value.inputTextField
+                //owner.lottoView.inputTextField.text = value.inputTextField
                 
                 for i in 0..<value.numbers.count {
                     
