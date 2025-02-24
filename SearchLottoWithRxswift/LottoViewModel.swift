@@ -16,16 +16,20 @@ class LottoViewModel: BaseViewModel {
     
     struct Input {
         let viewDidLoad: Observable<Void>
+        let basicButtonTapped:  Observable<ControlEvent<(row: Int, component: Int)>.Element>
+        let singleButtonTapped:  Observable<ControlEvent<(row: Int, component: Int)>.Element>
     }
     
     struct Output {
         let numbers: BehaviorRelay<[Int]>
+        let settingView: BehaviorRelay<UISetting>
     }
     
     let disposeBag = DisposeBag()
     
     private var numbers: [Int] = []
     private var latestTimes: Int = 0
+    private var uiSet = UISetting()
     
     init() {
         print("LottoViewModel Init")
@@ -35,19 +39,46 @@ class LottoViewModel: BaseViewModel {
     func transform(input: Input) -> Output {
         
         let outputNumbers = BehaviorRelay(value: numbers)
-        
+        let outputLottery = BehaviorRelay(value: uiSet)
         
         input.viewDidLoad.subscribe(with: self) { owner, _ in
             
             owner.calcLatestTimes()
             
-            
+            NetworkManager.shared.callRequest(no: owner.latestTimes, type: Lottery.self).subscribe(with: self) { owner, value in
+                let outputData = owner.outputStruct(data: value)
+                outputLottery.accept(outputData)
+            } onError: { owner, error in
+                print("onError", error)
+            } onCompleted: { owner in
+                print("onCompleted")
+            } onDisposed: { owner in
+                print("onDisposed")
+            }.disposed(by: owner.disposeBag)
+
         
             outputNumbers.accept(owner.numbers)
             
         }.disposed(by: disposeBag)
         
-        return Output(numbers: outputNumbers)
+        
+        input.basicButtonTapped.flatMap {
+            NetworkManager.shared.callRequest(no: self.numbers[$0.0], type: Lottery.self).debug("net")
+        }.debug("selsect").subscribe(with: self) { owner, value in
+            let outputData = owner.outputStruct(data: value)
+            outputLottery.accept(outputData)
+        } onError: { owner, error in
+            print(error)
+        } onCompleted: { owner in
+            print("onCompleted")
+        } onDisposed: { owner in
+            print("onDisposed")
+        }.disposed(by: disposeBag)
+
+        
+   
+        
+        return Output(numbers: outputNumbers, settingView: outputLottery)
     }
     
     deinit {
@@ -84,3 +115,30 @@ extension LottoViewModel {
     
 }
 
+extension LottoViewModel {
+
+    struct UISetting {
+        var numbers: [Int] = [0,0,0,0,0,0,0,0]
+        var timesLabel: String = ""
+        var dateLabel: String = ""
+        var inputTextField: String = ""
+        
+    }
+    
+    
+    private func outputStruct(data: Lottery) -> UISetting {
+        
+        var uiSet = UISetting()
+        
+        let emptyNum = 0
+        
+        uiSet.numbers = [data.drwtNo1, data.drwtNo2, data.drwtNo3, data.drwtNo4 , data.drwtNo5, data.drwtNo6, emptyNum, data.bnusNo]
+                
+        uiSet.timesLabel = data.drwNo.formatted() + "회"
+        uiSet.dateLabel = "\(data.drwNoDate) 추첨"
+        uiSet.inputTextField = data.drwNo.formatted()
+        
+        
+        return uiSet
+    }
+}
