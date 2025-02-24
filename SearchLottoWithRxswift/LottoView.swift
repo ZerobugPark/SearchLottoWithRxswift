@@ -108,6 +108,24 @@ class LottoView: UIView {
         return labels
     }()
     
+    let basicButton = {
+        let button = UIButton()
+        button.setTitle("Basic", for: .normal)
+        
+        button.backgroundColor = .lightGray
+        
+        return button
+    }()
+    
+    let singleButton = {
+        let button = UIButton()
+        button.setTitle("Single", for: .normal)
+        
+        button.backgroundColor = .lightGray
+        
+        return button
+    }()
+    
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -129,7 +147,9 @@ class LottoView: UIView {
             views[cnt].addSubview($0)
             cnt += 1
         }
-        
+        [basicButton, singleButton].forEach {
+            addSubview($0)
+        }
         
     }
     
@@ -197,6 +217,16 @@ class LottoView: UIView {
                 make.height.equalTo(30)
             }
             
+        }
+        
+        basicButton.snp.makeConstraints { make in
+            make.centerX.equalTo(self).offset(-50)
+            make.centerY.equalTo(self)
+        }
+        
+        singleButton.snp.makeConstraints { make in
+            make.centerX.equalTo(self).offset(50)
+            make.centerY.equalTo(self)
         }
         
         
